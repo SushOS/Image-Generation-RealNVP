@@ -599,7 +599,7 @@ class RealNVP(nn.Module):
             
             elif datainfo.name in ['imnet64', 'celeba']:
                 # SCALE 4: 24 x 8 x 8
-                self.s4_ckbd = self.checkerboard_combo(chan, dim, size, hps)
+                self.s4_ckbd = self.checkerboard_combo(chan, dim, size, hps, final=True)
                 self.s4_chan = self.channelwise_combo(chan*4, dim*2, hps)
                 self.order_matrix_4 = self.order_matrix(chan).cuda()
                 chan *= 2
@@ -625,18 +625,15 @@ class RealNVP(nn.Module):
             return nn.ModuleList([nn.ModuleList([
                 CheckerboardCoupling(in_out_dim, mid_dim, size, 1., hps),
                 CheckerboardCoupling(in_out_dim, mid_dim, size, 0., hps),
-                CheckerboardCoupling(in_out_dim, mid_dim, size, 1., hps),
-                CheckerboardCoupling(in_out_dim, mid_dim, size, 0., hps)]),
+                CheckerboardCoupling(in_out_dim, mid_dim, size, 1., hps)]),
                 nn.ModuleList([
                 CheckerboardCoupling(in_out_dim, mid_dim, size, 1., hps),
                 CheckerboardCoupling(in_out_dim, mid_dim, size, 0., hps),
-                CheckerboardCoupling(in_out_dim, mid_dim, size, 1., hps),
-                CheckerboardCoupling(in_out_dim, mid_dim, size, 0., hps)]),
+                CheckerboardCoupling(in_out_dim, mid_dim, size, 1., hps)]),
                 nn.ModuleList([
                 CheckerboardCoupling(in_out_dim, mid_dim, size, 1., hps),
                 CheckerboardCoupling(in_out_dim, mid_dim, size, 0., hps),
-                CheckerboardCoupling(in_out_dim, mid_dim, size, 1., hps),
-                CheckerboardCoupling(in_out_dim, mid_dim, size, 0., hps)])])
+                CheckerboardCoupling(in_out_dim, mid_dim, size, 1., hps)])])
         else:
             return nn.ModuleList([
                 CheckerboardCoupling(in_out_dim, mid_dim, size, 1., hps), 
@@ -776,34 +773,34 @@ class RealNVP(nn.Module):
             x3, x_off_2 = self.factor_out(x3, self.order_matrix_2)
             x3, x_off_3 = self.factor_out(x3, self.order_matrix_3)
 
-            if self.datainfo.name in ['imnet64', 'celeba']:
-                x1, x_off_4 = self.factor_out(x1, self.order_matrix_4)
-                x2, x_off_4 = self.factor_out(x2, self.order_matrix_4)
-                x3, x_off_4 = self.factor_out(x3, self.order_matrix_4)
+            # if self.datainfo.name in ['imnet64', 'celeba']:
+            #     x1, x_off_4 = self.factor_out(x1, self.order_matrix_4)
+            #     x2, x_off_4 = self.factor_out(x2, self.order_matrix_4)
+            #     x3, x_off_4 = self.factor_out(x3, self.order_matrix_4)
 
-                # SCALE 5: 4 x 4
-                for i in reversed(range(len(self.s5_ckbd[0]))):
-                    x1, _ = self.s5_ckbd[0][i](x1, reverse=True)
-                    x2, _ = self.s5_ckbd[1][i](x2, reverse=True)
-                    x3, _ = self.s5_ckbd[2][i](x3, reverse=True)
+            #     # SCALE 5: 4 x 4
+            #     for i in reversed(range(len(self.s5_ckbd[0]))):
+            #         x1, _ = self.s5_ckbd[0][i](x1, reverse=True)
+            #         x2, _ = self.s5_ckbd[1][i](x2, reverse=True)
+            #         x3, _ = self.s5_ckbd[2][i](x3, reverse=True)
 
             
-                x1 = self.restore(x1, x_off_4, self.order_matrix_4)
-                x2 = self.restore(x2, x_off_4, self.order_matrix_4)
-                x3 = self.restore(x3, x_off_4, self.order_matrix_4)
+            #     x1 = self.restore(x1, x_off_4, self.order_matrix_4)
+            #     x2 = self.restore(x2, x_off_4, self.order_matrix_4)
+            #     x3 = self.restore(x3, x_off_4, self.order_matrix_4)
 
-                # SCALE 4: 8 x 8
-                x1 = self.squeeze(x1)
-                x2 = self.squeeze(x2)
-                x3 = self.squeeze(x3)
+            #     # SCALE 4: 8 x 8
+            #     x1 = self.squeeze(x1)
+            #     x2 = self.squeeze(x2)
+            #     x3 = self.squeeze(x3)
 
-                x = (x1 + x2 + x3)/3
+            #     x = (x1 + x2 + x3)/3
 
-                for i in reversed(range(len(self.s4_chan))):
-                    x, _ = self.s4_chan[i](x, reverse=True)
-                x = self.undo_squeeze(x)
+            #     for i in reversed(range(len(self.s4_chan))):
+            #         x, _ = self.s4_chan[i](x, reverse=True)
+            #     x = self.undo_squeeze(x)
 
-            if(self.datainfo.name == "imnet32"):
+            if(self.datainfo.name == "imnet32" or self.datainfo.name == "celeba"):
                 for i in reversed(range(len(self.s4_ckbd[0]))):
                     x1, _ = self.s4_ckbd[0][i](x1, reverse=True)
                     x2, _ = self.s4_ckbd[1][i](x2, reverse=True)
@@ -1097,3 +1094,4 @@ class RealNVP(nn.Module):
                 else:
                     weight_scale = weight_scale + torch.pow(param, 2).sum()
         return self.log_prob(x), weight_scale
+
