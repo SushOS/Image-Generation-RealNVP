@@ -1,4 +1,4 @@
-# Image generation using RealNVP
+# Image generation using RealNVP (Flow based model)
 ![image](https://github.com/user-attachments/assets/4c086306-3334-4c0a-866b-239b697d2cd7)
 # What is Normalising Flow?
 Normalizing flows (NFs) are an exciting new family of neural networks for density estimation, sampling, and likelihood inference [1]. A NF is built by combining invertible components with tractable Jacobian computations, and they are shown to generalize many known models, such as invertible ResNets or autoregressive architectures.
